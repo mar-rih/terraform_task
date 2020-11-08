@@ -24,6 +24,13 @@ resource "aws_default_subnet" "default_az2" {
     "marwan" : "training"
   }
 }
+resource "aws_default_subnet" "default_az3" {
+  availability_zone = "us-east-2c"
+  tags = {
+    "terraform" : "true",
+    "marwan" : "training"
+  }
+}
 
 resource "aws_security_group" "prod_web"{
   name  = "prod_web"
@@ -63,7 +70,6 @@ resource "aws_instance" "prod_web" {
     aws_security_group.prod_web.id
   ]
 
-
   tags = {
     "terraform" : "true",
     "marwan" : "training"
@@ -71,13 +77,11 @@ resource "aws_instance" "prod_web" {
 }
 
 resource "aws_eip_association" "prod_web" {
-  instance_id   = aws_instance.prod_web[0].id
+  instance_id   = aws_instance.prod_web.0.id
   allocation_id = aws_eip.prod_web.id
 }
 
 resource "aws_eip" "prod_web" {
-  instance = aws_instance.prod_web[0].id
-
   tags = {
     "terraform" : "true",
     "marwan" : "training"
@@ -87,7 +91,7 @@ resource "aws_eip" "prod_web" {
 resource "aws_elb" "prod_web"{
   name            = "prod-web"
   instances       = aws_instance.prod_web.*.id
-  subnets         = [aws_default_subnet.default_az1.id, aws_default_subnet.default_az2.id]
+  subnets         = [aws_default_subnet.default_az1.id, aws_default_subnet.default_az2.id, aws_default_subnet.default_az3.id]
   security_groups = [aws_security_group.prod_web.id]
 
   listener {
