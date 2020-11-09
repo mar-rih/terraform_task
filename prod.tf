@@ -1,6 +1,33 @@
+terraform {
+  backend "s3" {
+    bucket         = "tf-course-20201104-marwanalrihawi"
+    key            = "terraform_task/terraform.tfstate"
+    dynamodb_table = "prod_web_state_lck"
+    role_arn       = "arn:aws:iam::211590417027:role/SRE"
+    region         = "us-east-2"
+  }
+}
+
+# create a dynamodb table for locking the state file
+resource "aws_dynamodb_table" "prod_web_state_lck" {
+  name = "prod_web_state_lck"
+  hash_key = "LockID"
+  read_capacity = 20
+  write_capacity = 20
+
+  attribute {
+    name = "LockID"
+    type = "S"
+  }
+
+  tags = {
+    "terraform" : "true",
+    "marwan" : "training"
+  }
+}
+
 provider "aws" {
   region = "us-east-2"
-
   assume_role {
     role_arn    = "arn:aws:iam::211590417027:role/SRE"
   }
@@ -40,7 +67,7 @@ resource "aws_subnet" "public" {
 resource "aws_subnet" "private" {
   vpc_id                  = aws_vpc.prod_web.id
   cidr_block              = "10.0.16.0/20" # 10.0.16.0 - 10.0.31.255 (4096)
-  map_public_ip_on_launch = true
+  #map_public_ip_on_launch = true
 }
 
 # A security group for the ELB so it is accessible via the web
